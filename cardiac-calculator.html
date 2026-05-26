@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CMR Ventricular Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #f7f6f2;
+      --surface:   #ffffff;
+      --border:    #e2e0d8;
+      --border-md: #c8c5ba;
+      --text:      #1a1917;
+      --muted:     #6b6860;
+      --faint:     #9b9890;
+      --accent:    #1a4a3a;
+      --accent-bg: #edf4f1;
+      --accent-bd: #b8d4c8;
+      --warn-bg:   #fdf5e6;
+      --warn-bd:   #e8d090;
+      --warn-tx:   #7a5a10;
+      --danger-bg: #fdf0ef;
+      --danger-bd: #e8b8b5;
+      --danger-tx: #8a2020;
+      --ok-bg:     #edf4f1;
+      --ok-bd:     #b8d4c8;
+      --ok-tx:     #1a4a3a;
+      --radius:    6px;
+      --radius-lg: 10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 4rem;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 2rem 2rem 1.75rem;
+    }
+    .header-inner {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    header h1 {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: 1.9rem;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      margin-bottom: .35rem;
+    }
+    header h1 em {
+      font-style: italic;
+      opacity: .85;
+    }
+    header p {
+      font-size: .8rem;
+      font-weight: 300;
+      opacity: .7;
+      letter-spacing: .02em;
+    }
+
+    /* ── Layout ── */
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 0;
+    }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: .6rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Toggle buttons ── */
+    .toggle-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.25rem;
+    }
+    .toggle-group.small { margin-bottom: 0; }
+    .tbtn {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem;
+      font-weight: 400;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .tbtn:hover { border-color: var(--accent); color: var(--accent); }
+    .tbtn.on {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 500;
+    }
+
+    /* ── Form grid ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    @media (max-width: 480px) {
+      .form-grid, .form-grid.three { grid-template-columns: 1fr 1fr; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: .01em;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .15s;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input[type="number"]:focus { border-color: var(--accent); }
+    input[type="number"]::placeholder { color: var(--faint); font-weight: 300; }
+
+    /* ── Calculate button ── */
+    .calc-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: .02em;
+      transition: opacity .15s;
+      margin-top: .25rem;
+    }
+    .calc-btn:hover { opacity: .88; }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1.25rem 0;
+    }
+
+    /* ── BSA output ── */
+    .bsa-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: .75rem 1rem;
+      background: var(--accent-bg);
+      border: 1px solid var(--accent-bd);
+      border-radius: var(--radius);
+      margin-bottom: 1.25rem;
+    }
+    .bsa-label { font-size: .8rem; color: var(--accent); font-weight: 500; }
+    .bsa-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+    .bsa-unit { font-size: .8rem; color: var(--accent); opacity: .7; }
+
+    /* ── Results table ── */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    .results-table thead th {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      padding: 0 8px 8px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .results-table thead th:not(:first-child) { text-align: right; }
+    .results-table tbody td {
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .results-table tbody td:not(:first-child) { text-align: right; }
+    .results-table tbody tr:last-child td { border-bottom: none; }
+
+    .measure-name {
+      font-weight: 500;
+      font-size: .85rem;
+      color: var(--text);
+    }
+    .measure-abbr {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--faint);
+      margin-top: 2px;
+    }
+    .val-cell {
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .val-unit {
+      font-size: .7rem;
+      font-weight: 400;
+      color: var(--faint);
+      margin-left: 3px;
+    }
+    .range-cell {
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-ok     { background: var(--ok-bg);     color: var(--ok-tx);     border: 1px solid var(--ok-bd); }
+    .badge-low    { background: var(--warn-bg);   color: var(--warn-tx);   border: 1px solid var(--warn-bd); }
+    .badge-high   { background: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-bd); }
+
+    /* ── Reference note ── */
+    .ref-note {
+      font-size: .73rem;
+      color: var(--faint);
+      line-height: 1.7;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .ref-note strong { color: var(--muted); font-weight: 500; }
+
+    /* ── Results section heading ── */
+    .results-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .75rem;
+    }
+    .decade-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--bg);
+      border: 1px solid var(--border-md);
+      color: var(--muted);
+    }
+
+    /* ── Copy card ── */
+    .copy-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 1.25rem;
+    }
+    .copy-btn {
+      padding: 7px 16px;
+      border: 1px solid var(--border-md);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { border-color: var(--ok-bd); color: var(--ok-tx); background: var(--ok-bg); }
+    .copy-status {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--faint);
+    }
+    /* ── Export table ── */
+    .export-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+    .export-table + .export-table { margin-top: 1.25rem; }
+    .export-table caption {
+      caption-side: top;
+      text-align: left;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--muted);
+      padding-bottom: .5rem;
+    }
+    .export-table th {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      font-weight: 500;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--faint);
+      background: var(--bg);
+      padding: 6px 10px;
+      border: 1px solid var(--border-md);
+      text-align: left;
+    }
+    .export-table td {
+      font-family: 'DM Mono', monospace;
+      font-size: .82rem;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .export-table td:first-child { font-weight: 500; color: var(--text); }
+
+    /* ── Hidden ── */
+    .hidden { display: none; }
+
+    /* ── Footer ── */
+    footer {
+      max-width: 760px;
+      margin: 2.5rem auto 0;
+      padding: 0 1.25rem;
+      font-size: .72rem;
+      color: var(--faint);
+      line-height: 1.7;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>CMR Ventricular <em>Calculator</em></h1>
+    <p>Reference ranges from Maceira et al. 2006 · SSFP cardiovascular magnetic resonance · 120 healthy volunteers</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Inputs card ── -->
+  <div class="card">
+
+    <p class="section-label">Ventricle</p>
+    <div class="toggle-group" id="ventricle-toggle">
+      <button class="tbtn on" onclick="setV('LV')">Left ventricle (LV)</button>
+      <button class="tbtn"    onclick="setV('RV')">Right ventricle (RV)</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="section-label">Patient details</p>
+    <div class="form-grid" style="margin-bottom:1rem">
+      <div class="field full">
+        <label>Sex</label>
+        <div class="toggle-group small" id="sex-toggle">
+          <button class="tbtn on" onclick="setSex('M')">Male</button>
+          <button class="tbtn"    onclick="setSex('F')">Female</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="age">Age (years, 20–79)</label>
+        <input type="number" id="age" min="20" max="79" placeholder="e.g. 52">
+      </div>
+      <div class="field">
+        <label for="ht">Height (cm)</label>
+        <input type="number" id="ht" min="100" max="220" placeholder="e.g. 175">
+      </div>
+      <div class="field">
+        <label for="wt">Weight (kg)</label>
+        <input type="number" id="wt" min="30" max="250" placeholder="e.g. 80">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="section-label" id="measured-label">Measured LV values</p>
+    <div class="form-grid three">
+      <div class="field">
+        <label for="edv">EDV (mL)</label>
+        <input type="number" id="edv" min="0" max="600" placeholder="e.g. 155">
+      </div>
+      <div class="field">
+        <label for="esv">ESV (mL)</label>
+        <input type="number" id="esv" min="0" max="400" placeholder="e.g. 55">
+      </div>
+      <div class="field">
+        <label for="mass" id="mass-label">LV mass (g)</label>
+        <input type="number" id="mass" min="0" max="600" placeholder="e.g. 130">
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()">Calculate</button>
+  </div>
+
+  <!-- ── Results card ── -->
+  <div class="card hidden" id="results-card">
+
+    <div class="bsa-row">
+      <span class="bsa-label">BSA (Mosteller)</span>
+      <span class="bsa-val" id="bsa-out">—</span>
+      <span class="bsa-unit">m²</span>
+    </div>
+
+    <!-- Absolute values -->
+    <div class="results-heading">
+      <p class="section-label" style="margin:0">Absolute values (normal range)</p>
+      <span class="decade-tag" id="tag-abs"></span>
+    </div>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th style="width:38%">Measure</th>
+          <th style="width:20%">Value</th>
+          <th style="width:26%">95% CI range</th>
+          <th style="width:16%">Status</th>
+        </tr>
+      </thead>
+      <tbody id="abs-body"></tbody>
+    </table>
+
+    <div class="divider"></div>
+
+    <!-- Indexed values -->
+    <div class="results-heading">
+      <p class="section-label" style="margin:0">BSA-indexed values (Normal Range)</p>
+      <span class="decade-tag" id="tag-idx"></span>
+    </div>
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th style="width:38%">Measure</th>
+          <th style="width:20%">Value</th>
+          <th style="width:26%">95% CI range</th>
+          <th style="width:16%">Status</th>
+        </tr>
+      </thead>
+      <tbody id="idx-body"></tbody>
+    </table>
+
+    <p class="ref-note" id="ref-note"></p>
+  </div>
+
+  <!-- ── Copy table card ── -->
+  <div class="card hidden" id="copy-card">
+    <p class="section-label">Copy table</p>
+    <div id="copy-table-container"></div>
+    <div class="copy-card-actions">
+      <button class="copy-btn" id="copy-btn" onclick="copyResults()">Copy table</button>
+      <span class="copy-status" id="copy-status"></span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>
+    LV reference: Maceira AM, Prasad SK, Khan M, Pennell DJ.
+    Normalized left ventricular systolic and diastolic function by steady state free precession cardiovascular magnetic resonance.
+    <em>J Cardiovasc Magn Reson</em> 2006;8:417–426.
+  </p>
+  <p style="margin-top:.4rem">
+    RV reference: Maceira AM, Prasad SK, Khan M, Pennell DJ.
+    Reference right ventricular systolic and diastolic function normalized to age, gender and body surface area from steady-state free precession cardiovascular magnetic resonance.
+    <em>Eur Heart J</em> 2006;27:2879–2888.
+  </p>
+  <p style="margin-top:.4rem">
+    For clinical decision support only. Not a substitute for clinical judgement.
+  </p>
+</footer>
+
+<script>
+  // ── State ────────────────────────────────────────────────────────────────────
+  let ventricle = 'LV';
+  let sex = 'M';
+  const storedResults = { LV: null, RV: null };
+
+  // ── Reference data ───────────────────────────────────────────────────────────
+  // Index: [0]=20-29  [1]=30-39  [2]=40-49  [3]=50-59  [4]=60-69  [5]=70-79
+  // Each entry: [lo, hi] = 95% CI from paper tables
+
+  const LV = {
+    M: {
+      abs: {
+        edv:  [[126,208],[121,204],[117,200],[113,196],[109,191],[105,187]],
+        esv:  [[35,80],  [33,78],  [31,76],  [29,74],  [27,72],  [25,70]],
+        sv:   [[81,137], [79,135], [77,133], [75,131], [73,129], [71,127]],
+        ef:   [[57,74],  [57,75],  [58,75],  [58,76],  [58,76],  [59,77]],
+        mass: [[109,186],[109,185],[108,185],[107,184],[107,183],[106,183]]
+      },
+      idx: {
+        edv:  [[68,103],[66,101],[64,99],[62,97],[60,95],[58,93]],
+        esv:  [[19,41], [18,39], [17,38],[15,37],[14,36],[13,35]],
+        sv:   [[44,68], [43,67], [42,66],[41,65],[40,64],[39,63]],
+        mass: [[59,93], [59,92], [58,91],[57,91],[57,90],[56,89]]
+      }
+    },
+    F: {
+      abs: {
+        edv:  [[99,179], [94,175], [90,171],[86,166],[82,162],[77,158]],
+        esv:  [[29,66],  [27,64],  [25,62], [22,59], [20,57], [18,55]],
+        sv:   [[63,119], [61,117], [59,115],[57,113],[56,111],[54,109]],
+        ef:   [[56,75],  [57,75],  [58,76], [59,77], [60,78], [60,78]],
+        mass: [[69,141], [70,142], [71,143],[72,144],[73,145],[74,146]]
+      },
+      idx: {
+        edv:  [[65,99],[62,96],[59,93],[56,90],[53,87],[50,84]],
+        esv:  [[19,37],[17,36],[16,34],[14,33],[13,31],[12,30]],
+        sv:   [[42,66],[40,65],[39,63],[37,62],[36,60],[34,59]],
+        mass: [[47,77],[47,77],[48,77],[48,78],[48,78],[49,78]]
+      }
+    }
+  };
+
+  const RV = {
+    M: {
+      abs: {
+        edv:  [[127,227],[121,221],[116,216],[111,210],[105,205],[100,200]],
+        esv:  [[38,98],  [34,94],  [29,89], [25,85],  [20,80],  [16,76]],
+        sv:   [[74,143], [74,142], [73,141],[72,140],  [71,139], [70,138]],
+        ef:   [[48,74],  [50,76],  [52,77], [53,79],   [55,81],  [57,83]],
+        mass: [[42,99],  [40,97],  [39,95], [37,94],   [35,92],  [33,90]]
+      },
+      idx: {
+        edv:  [[68,114],[65,111],[62,108],[59,105],[56,101],[52,98]],
+        esv:  [[21,50], [18,47], [16,45], [13,42], [11,40], [8,37]],
+        sv:   [[40,72], [39,71], [39,71], [38,70], [37,69], [36,69]],
+        mass: [[23,50], [22,49], [21,48], [20,46], [19,45], [18,44]]
+      }
+    },
+    F: {
+      abs: {
+        edv:  [[100,184],[94,178],[87,172],[81,166],[75,160],[69,153]],
+        esv:  [[29,82],  [25,77], [20,72], [15,68], [11,63], [6,58]],
+        sv:   [[61,112], [59,111],[58,109],[56,108],[55,106],[53,105]],
+        ef:   [[49,73],  [51,75], [53,77], [55,79], [57,81], [59,83]],
+        mass: [[33,74],  [31,72], [28,70], [26,68], [24,66], [22,63]]
+      },
+      idx: {
+        edv:  [[65,102],[61,98],[57,94],[53,90],[49,86],[45,82]],
+        esv:  [[20,45], [17,43],[14,40],[11,37],[8,34], [6,32]],
+        sv:   [[39,63], [38,62],[37,61],[36,60],[34,58],[33,57]],
+        mass: [[22,42], [20,40],[19,39],[17,37],[16,36],[14,35]]
+      }
+    }
+  };
+
+  const DECADES = ['20–29','30–39','40–49','50–59','60–69','70–79'];
+
+  // ── UI helpers ───────────────────────────────────────────────────────────────
+  function setV(v) {
+    ventricle = v;
+    const btns = document.querySelectorAll('#ventricle-toggle .tbtn');
+    btns[0].className = 'tbtn' + (v === 'LV' ? ' on' : '');
+    btns[1].className = 'tbtn' + (v === 'RV' ? ' on' : '');
+    document.getElementById('measured-label').textContent = 'Measured ' + v + ' values';
+    document.getElementById('mass-label').textContent = v + ' mass (g)';
+    document.getElementById('results-card').classList.add('hidden');
+    document.getElementById('copy-card').classList.add('hidden');
+  }
+
+  function setSex(s) {
+    sex = s;
+    storedResults.LV = null;
+    storedResults.RV = null;
+    const btns = document.querySelectorAll('#sex-toggle .tbtn');
+    btns[0].className = 'tbtn' + (s === 'M' ? ' on' : '');
+    btns[1].className = 'tbtn' + (s === 'F' ? ' on' : '');
+    document.getElementById('results-card').classList.add('hidden');
+    document.getElementById('copy-card').classList.add('hidden');
+  }
+
+  function decadeIdx(age) {
+    return Math.min(Math.floor((Math.max(20, Math.min(79, age)) - 20) / 10), 5);
+  }
+
+  function badge(val, lo, hi) {
+    if (val < lo) return '<span class="badge badge-low">Low</span>';
+    if (val > hi) return '<span class="badge badge-high">High</span>';
+    return '<span class="badge badge-ok">Normal</span>';
+  }
+
+  function row(name, abbr, val, unit, lo, hi, dp) {
+    dp = dp !== undefined ? dp : 1;
+    return `<tr>
+      <td>
+        <div class="measure-name">${name}</div>
+        <div class="measure-abbr">${abbr}</div>
+      </td>
+      <td class="val-cell">${val.toFixed(dp)}<span class="val-unit">${unit}</span></td>
+      <td class="range-cell">${lo}–${hi} ${unit}</td>
+      <td>${badge(val, lo, hi)}</td>
+    </tr>`;
+  }
+
+  // ── Main calculation ─────────────────────────────────────────────────────────
+  function calculate() {
+    const age  = parseFloat(document.getElementById('age').value);
+    const ht   = parseFloat(document.getElementById('ht').value);
+    const wt   = parseFloat(document.getElementById('wt').value);
+    const edv  = parseFloat(document.getElementById('edv').value);
+    const esv  = parseFloat(document.getElementById('esv').value);
+    const mass = parseFloat(document.getElementById('mass').value);
+
+    if (isNaN(age) || age < 20 || age > 79) {
+      alert('Please enter an age between 20 and 79.');
+      return;
+    }
+    if (isNaN(ht) || isNaN(wt)) {
+      alert('Please enter height and weight.');
+      return;
+    }
+    if (isNaN(edv) || isNaN(esv) || isNaN(mass)) {
+      alert('Please enter EDV, ESV, and mass.');
+      return;
+    }
+    if (esv >= edv) {
+      alert('ESV must be less than EDV.');
+      return;
+    }
+
+    // Calculations
+    const bsa   = Math.sqrt((ht * wt) / 3600);           // Mosteller
+    const sv    = edv - esv;
+    const ef    = (sv / edv) * 100;
+    const edvi  = edv  / bsa;
+    const esvi  = esv  / bsa;
+    const svi   = sv   / bsa;
+    const massi = mass / bsa;
+
+    const di  = decadeIdx(age);
+    const dl  = DECADES[di];
+    const R   = ventricle === 'LV' ? LV[sex] : RV[sex];
+    const vl  = ventricle;
+    const sexl = sex === 'M' ? 'male' : 'female';
+
+    const src = ventricle === 'LV'
+      ? 'Maceira et al. JCMR 2006;8:417–426, Tables 2 & 3'
+      : 'Maceira et al. Eur Heart J 2006;27:2879–2888, Tables 2 & 3';
+
+    // Populate BSA
+    document.getElementById('bsa-out').textContent = bsa.toFixed(2);
+
+    // Decade tags
+    const tagText = `age ${dl} · ${sexl}`;
+    document.getElementById('tag-abs').textContent = tagText;
+    document.getElementById('tag-idx').textContent = tagText;
+
+    // Absolute table
+    const [edvLo,  edvHi]  = R.abs.edv[di];
+    const [esvLo,  esvHi]  = R.abs.esv[di];
+    const [svLo,   svHi]   = R.abs.sv[di];
+    const [efLo,   efHi]   = R.abs.ef[di];
+    const [mLo,    mHi]    = R.abs.mass[di];
+
+    document.getElementById('abs-body').innerHTML =
+      row('End-diastolic volume', vl + ' EDV', edv,  'mL', edvLo, edvHi) +
+      row('End-systolic volume',  vl + ' ESV', esv,  'mL', esvLo, esvHi) +
+      row('Stroke volume',        vl + ' SV',  sv,   'mL', svLo,  svHi)  +
+      row('Ejection fraction',    vl + ' EF',  ef,   '%',  efLo,  efHi)  +
+      row(vl + ' mass',           vl + 'M',    mass, 'g',  mLo,   mHi);
+
+    // Indexed table
+    const [edviLo, edviHi] = R.idx.edv[di];
+    const [esviLo, esviHi] = R.idx.esv[di];
+    const [sviLo,  sviHi]  = R.idx.sv[di];
+    const [miLo,   miHi]   = R.idx.mass[di];
+
+    document.getElementById('idx-body').innerHTML =
+      row('EDV index',  vl + ' EDVI',   edvi,  'mL/m²', edviLo, edviHi) +
+      row('ESV index',  vl + ' ESVI',   esvi,  'mL/m²', esviLo, esviHi) +
+      row('SV index',   vl + ' SVI',    svi,   'mL/m²', sviLo,  sviHi)  +
+      row('Mass index', vl + 'M / BSA', massi, 'g/m²',  miLo,   miHi);
+
+    // Reference note
+    document.getElementById('ref-note').innerHTML =
+      `<strong>Reference:</strong> ${src}. SSFP CMR, 120 healthy volunteers aged 20–79. ` +
+      `Ranges are 95% confidence intervals for the ${dl} age decade (${sexl}), ` +
+      `applied directly without interpolation. ` +
+      `BSA by Mosteller formula. SV = EDV − ESV · EF = SV ÷ EDV × 100.`;
+
+    // Store results for copy utility
+    storedResults[ventricle] = {
+      label: ventricle === 'LV' ? 'Left Ventricle' : 'Right Ventricle',
+      sexLabel: sexl, decade: dl, bsa: bsa.toFixed(2),
+      abs: { edv:  [edv,  'mL',   edvLo,  edvHi ],
+             esv:  [esv,  'mL',   esvLo,  esvHi ],
+             sv:   [sv,   'mL',   svLo,   svHi  ],
+             ef:   [ef,   '%',    efLo,   efHi  ],
+             mass: [mass, 'g',    mLo,    mHi   ] },
+      idx: { edv:  [edvi,  'mL/m²', edviLo, edviHi],
+             esv:  [esvi,  'mL/m²', esviLo, esviHi],
+             sv:   [svi,   'mL/m²', sviLo,  sviHi ],
+             mass: [massi, 'g/m²',  miLo,   miHi  ] }
+    };
+    // Render copy table and show copy card
+    const available = [storedResults.LV, storedResults.RV].filter(Boolean);
+    document.getElementById('copy-table-container').innerHTML = available.map(buildTableHTML).join('');
+    const labels = [storedResults.LV && 'LV', storedResults.RV && 'RV'].filter(Boolean);
+    document.getElementById('copy-status').textContent = labels.join(' + ') + ' results';
+    document.getElementById('copy-card').classList.remove('hidden');
+
+    // Show results
+    document.getElementById('results-card').classList.remove('hidden');
+    document.getElementById('results-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── Copy utility ─────────────────────────────────────────────────────────────
+  function buildTableHTML(r) {
+    const cell = (val, unit, lo, hi) => `${val.toFixed(1)} ${unit} (${lo}–${hi} ${unit})`;
+    const a = r.abs, x = r.idx;
+    return `<table class="export-table">
+      <caption>${r.label} &middot; ${r.sexLabel} &middot; Age ${r.decade} &middot; BSA ${r.bsa}&thinsp;m&sup2;</caption>
+      <thead><tr><th></th><th>Absolute (Normal Range)</th><th>Indexed (Normal Range)</th></tr></thead>
+      <tbody>
+        <tr><td>EDV</td><td>${cell(...a.edv)}</td><td>${cell(...x.edv)}</td></tr>
+        <tr><td>ESV</td><td>${cell(...a.esv)}</td><td>${cell(...x.esv)}</td></tr>
+        <tr><td>SV</td><td>${cell(...a.sv)}</td><td>${cell(...x.sv)}</td></tr>
+        <tr><td>EF</td><td>${cell(...a.ef)}</td><td>&mdash;</td></tr>
+        <tr><td>Mass</td><td>${cell(...a.mass)}</td><td>${cell(...x.mass)}</td></tr>
+      </tbody>
+    </table>`;
+  }
+
+  function copyResults() {
+    const container = document.getElementById('copy-table-container');
+    if (!container.innerHTML.trim()) return;
+    const html = container.innerHTML;
+    try {
+      navigator.clipboard.write([
+        new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })
+      ]).then(() => flashCopied());
+    } catch {
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(container);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('copy');
+      sel.removeAllRanges();
+      flashCopied();
+    }
+  }
+
+  function flashCopied() {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy table'; btn.classList.remove('copied'); }, 2000);
+  }
+</script>
+</body>
+</html>
