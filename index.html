@@ -951,9 +951,11 @@
   function buildTableHTML(r) {
     const cell = (val, unit, lo, hi) => `${val.toFixed(1)} ${unit} (${lo}–${hi} ${unit})`;
     const a = r.abs, x = r.idx;
+    const label = r.ventricleKey === 'LV' ? t('exportLeftVentricle') : t('exportRightVentricle');
+    const sexl  = r.sex === 'M' ? t('maleLower') : t('femaleLower');
     return `<table class="export-table">
-      <caption>${r.label} &middot; ${r.sexLabel} &middot; Age ${r.decade} &middot; BSA ${r.bsa}&thinsp;m&sup2;</caption>
-      <thead><tr><th></th><th>Absolute (Normal Range)</th><th>Indexed (Normal Range)</th></tr></thead>
+      <caption>${label} &middot; ${sexl} &middot; ${t('agePre')} ${r.decade} &middot; BSA ${r.bsa}&thinsp;m&sup2;</caption>
+      <thead><tr><th></th><th>${t('exportAbsolute')}</th><th>${t('exportIndexed')}</th></tr></thead>
       <tbody>
         <tr><td>EDV</td><td>${cell(...a.edv)}</td><td>${cell(...x.edv)}</td></tr>
         <tr><td>ESV</td><td>${cell(...a.esv)}</td><td>${cell(...x.esv)}</td></tr>
@@ -986,9 +988,9 @@
 
   function flashCopied() {
     const btn = document.getElementById('copy-btn');
-    btn.textContent = 'Copied!';
+    btn.textContent = t('copiedBtn');
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy table'; btn.classList.remove('copied'); }, 2000);
+    setTimeout(() => { btn.textContent = t('copyTableBtn'); btn.classList.remove('copied'); }, 2000);
   }
 </script>
 </body>
